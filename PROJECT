@@ -1,0 +1,14 @@
+domain: jenkins.io
+layout: go.kubebuilder.io/v2
+projectName: jenkinsfile-runner-operator
+repo: github.com/waveywaves/jenkinsfile-runner-operator
+resources:
+- group: jenkins.io
+  kind: Runner
+  version: v1alpha1
+- group: jenkins.io
+  kind: Run
+  version: v1alpha1
+version: 3-alpha
+plugins:
+  go.sdk.operatorframework.io/v2-alpha: {}
