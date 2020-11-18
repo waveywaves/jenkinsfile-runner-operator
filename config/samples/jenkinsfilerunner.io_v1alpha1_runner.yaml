@@ -1,4 +1,4 @@
-apiVersion: jenkins.io.jenkins.io/v1alpha1
+apiVersion: jenkinsfilerunner.io/v1alpha1
 kind: Runner
 metadata:
   name: runner-sample

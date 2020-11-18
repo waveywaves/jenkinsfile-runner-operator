@@ -5,7 +5,7 @@ metadata:
   name: run-editor-role
 rules:
 - apiGroups:
-  - jenkins.io.jenkins.io
+  - jenkinsfilerunner.io
   resources:
   - runs
   verbs:
@@ -17,7 +17,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - jenkins.io.jenkins.io
+  - jenkinsfilerunner.io
   resources:
   - runs/status
   verbs:
