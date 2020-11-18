@@ -5,7 +5,7 @@ metadata:
   name: run-viewer-role
 rules:
 - apiGroups:
-  - jenkins.io.jenkins.io
+  - jenkinsfilerunner.io
   resources:
   - runs
   verbs:
@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - jenkins.io.jenkins.io
+  - jenkinsfilerunner.io
   resources:
   - runs/status
   verbs:

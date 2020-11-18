@@ -34,8 +34,8 @@ type RunnerReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=jenkins.io.jenkins.io,resources=runners,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=jenkins.io.jenkins.io,resources=runners/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=jenkinsfilerunner.io,resources=runners,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=jenkinsfilerunner.io,resources=runners/status,verbs=get;update;patch
 
 func (r *RunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()

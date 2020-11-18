@@ -60,7 +60,7 @@ func main() {
 		MetricsBindAddress: metricsAddr,
 		Port:               9443,
 		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "e70a82fb.jenkins.io",
+		LeaderElectionID:   "e70a82fb.jenkinsfilerunner.io",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
