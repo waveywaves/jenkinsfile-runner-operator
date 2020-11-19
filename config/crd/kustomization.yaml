@@ -4,7 +4,6 @@
 resources:
 - bases/jenkinsfilerunner.io_runners.yaml
 - bases/jenkinsfilerunner.io_runs.yaml
-- bases/jenkinsfilerunner.io_runnerimages.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

@@ -31,12 +31,8 @@ import (
 )
 
 const (
-	JenkinsfileRunnerContainerName = "runner"
-	// Default attributes for runner container
-	DefaultCPULimit   = "100m"
-	DefaultMEMLimit   = "100Mi"
-	DefaultCPURequest = "50m"
-	DefaultMEMRequest = "50Mi"
+	RunnerContainerName = "runner"
+	RunnerImage         = "jenkins/jenkinsfile-runner:latest"
 )
 
 // RunnerReconciler reconciles a Runner object
@@ -51,9 +47,9 @@ type RunnerReconciler struct {
 
 func (r *RunnerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
-	runnerLogger := r.Log.WithValues("runnerimage", req.NamespacedName)
+	runnerLogger := r.Log.WithValues("runner", req.NamespacedName)
 
-	// Fetch the Jenkinsfile Runner Image instance
+	// Fetch the Jenkinsfile Runner instance
 	runnerInstance := &v1alpha1.Runner{}
 	err := r.Client.Get(ctx, req.NamespacedName, runnerInstance)
 	if err != nil {
@@ -86,8 +82,8 @@ func (r *RunnerReconciler) getRunnerPod(req ctrl.Request) *corev1.Pod {
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:            JenkinsfileRunnerContainerName,
-					Image:           "jenkins/jenkinsfile-runner:latest",
+					Name:            RunnerContainerName,
+					Image:           RunnerImage,
 					ImagePullPolicy: corev1.PullIfNotPresent,
 					Command:         []string{"/bin/sh", "-c", "--"},
 					Args:            []string{"while true; do sleep 30; done;"},

@@ -30,7 +30,6 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	jenkinsfilerunneriov1alpha1 "github.com/waveywaves/jenkinsfile-runner-operator/api/v1alpha1"
 	jenkinsiov1alpha1 "github.com/waveywaves/jenkinsfile-runner-operator/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
@@ -64,12 +63,6 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(cfg).ToNot(BeNil())
 
 	err = jenkinsiov1alpha1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = jenkinsiov1alpha1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = jenkinsfilerunneriov1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
