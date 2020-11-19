@@ -1,0 +1,6 @@
+apiVersion: jenkinsfilerunner.io/v1alpha1
+kind: RunnerImage
+metadata:
+  name: runnerimage-sample
+spec:
+  jenkinsVersion: latest 

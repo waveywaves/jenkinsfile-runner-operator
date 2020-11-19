@@ -1,0 +1,20 @@
+# permissions for end users to view runnerimages.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: runnerimage-viewer-role
+rules:
+- apiGroups:
+  - jenkinsfilerunner.io
+  resources:
+  - runnerimages
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - jenkinsfilerunner.io
+  resources:
+  - runnerimages/status
+  verbs:
+  - get

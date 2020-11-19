@@ -9,6 +9,26 @@ rules:
 - apiGroups:
   - jenkinsfilerunner.io
   resources:
+  - runnerimages
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - jenkinsfilerunner.io
+  resources:
+  - runnerimages/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - jenkinsfilerunner.io
+  resources:
   - runners
   verbs:
   - create
