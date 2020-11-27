@@ -4,10 +4,7 @@ projectName: jenkinsfile-runner-operator
 repo: github.com/waveywaves/jenkinsfile-runner-operator
 resources:
 - group: jenkinsfilerunner.io
-  kind: Runner
-  version: v1alpha1
-- group: jenkinsfilerunner.io
-  kind: Run
+  kind: RunnerImage
   version: v1alpha1
 version: 3-alpha
 plugins:

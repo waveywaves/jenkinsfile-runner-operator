@@ -1,7 +1,0 @@
-apiVersion: jenkinsfilerunner.io/v1alpha1
-kind: Runner
-metadata:
-  name: runner-sample
-spec:
-  # Add fields here
-  foo: bar

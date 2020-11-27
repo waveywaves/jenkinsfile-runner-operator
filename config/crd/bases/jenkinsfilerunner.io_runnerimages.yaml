@@ -6,20 +6,30 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: runs.jenkinsfilerunner.io
+  name: runnerimages.jenkinsfilerunner.io
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.plugins
+    name: Plugins
+    type: string
+  - JSONPath: .status.phase
+    name: Status
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: jenkinsfilerunner.io
   names:
-    kind: Run
-    listKind: RunList
-    plural: runs
-    singular: run
+    kind: RunnerImage
+    listKind: RunnerImageList
+    plural: runnerimages
+    singular: runnerimage
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
-      description: Run is the Schema for the runs API
+      description: RunnerImage is the Schema for the runnerimages API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -34,14 +44,27 @@ spec:
         metadata:
           type: object
         spec:
-          description: RunSpec defines the desired state of Run
+          description: RunnerImageSpec defines the desired state of RunnerImage
           properties:
-            foo:
-              description: Foo is an example field of Run. Edit Run_types.go to remove/update
-              type: string
+            plugins:
+              items:
+                type: string
+              type: array
           type: object
         status:
-          description: RunStatus defines the observed state of Run
+          description: RunnerImageStatus defines the observed state of RunnerImage
+          properties:
+            message:
+              description: Message is the message obtained at a certain state
+              type: string
+            phase:
+              description: Phase would be either of Initialized, Started, Completed,
+                Error
+              type: string
+            reason:
+              description: Reason would be used when there is an error and would be
+                either of
+              type: string
           type: object
       type: object
   version: v1alpha1

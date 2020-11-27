@@ -67,20 +67,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.RunnerReconciler{
+	if err = (&controllers.RunnerImageReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Runner"),
+		Log:    ctrl.Log.WithName("controllers").WithName("RunnerImage"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Runner")
-		os.Exit(1)
-	}
-	if err = (&controllers.RunReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Run"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Run")
+		setupLog.Error(err, "unable to create controller", "controller", "RunnerImage")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

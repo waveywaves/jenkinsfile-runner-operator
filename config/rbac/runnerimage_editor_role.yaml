@@ -1,20 +1,24 @@
-# permissions for end users to view runs.
+# permissions for end users to edit runnerimages.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: run-viewer-role
+  name: runnerimage-editor-role
 rules:
 - apiGroups:
   - jenkinsfilerunner.io
   resources:
-  - runs
+  - runnerimages
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - jenkinsfilerunner.io
   resources:
-  - runs/status
+  - runnerimages/status
   verbs:
   - get

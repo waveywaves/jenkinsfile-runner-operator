@@ -1,5 +1,4 @@
 ## Append samples you want in your CSV to this file as resources ##
 resources:
-- jenkinsfilerunner.io_v1alpha1_runner.yaml
-- jenkinsfilerunner.io_v1alpha1_run.yaml
+- jenkinsfilerunner.io_v1alpha1_runnerimage.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples
