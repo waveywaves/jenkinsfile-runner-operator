@@ -7,9 +7,33 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - jenkinsfilerunner.io
+  - ""
   resources:
-  - runners
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
   verbs:
   - create
   - delete
@@ -21,15 +45,7 @@ rules:
 - apiGroups:
   - jenkinsfilerunner.io
   resources:
-  - runners/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - jenkinsfilerunner.io
-  resources:
-  - runs
+  - runnerimages
   verbs:
   - create
   - delete
@@ -41,7 +57,19 @@ rules:
 - apiGroups:
   - jenkinsfilerunner.io
   resources:
-  - runs/status
+  - runnerimages/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - jenkinsfilerunner.io
+  resources:
+  - runnerimages/status
   verbs:
   - get
   - patch
