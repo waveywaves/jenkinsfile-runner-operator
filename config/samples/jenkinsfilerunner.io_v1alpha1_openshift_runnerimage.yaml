@@ -1,0 +1,20 @@
+apiVersion: jenkinsfilerunner.io/v1alpha1
+kind: RunnerImage
+metadata:
+  name: runnerimage-sample
+spec:
+  plugins:
+    - openshift-client
+    - openshift-sync
+    - openshift-login
+    - configuration-as-code
+    - workflow-scm-step
+    - credentials
+    - workflow-job
+    - workflow-cps-global-lib
+    - workflow-support
+    - pipeline-model-definition
+    - kubernetes:1.25.2
+  to: 
+    name: quay.io/waveywaves/jfr-test
+    secret: waveywaves-jfr-helper-pull-secret  
