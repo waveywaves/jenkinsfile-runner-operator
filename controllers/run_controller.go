@@ -18,7 +18,8 @@ package controllers
 
 import (
 	"context"
-	v1 "k8s.io/api/core/v1"
+	"fmt"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/go-logr/logr"
 	v1alpha1 "github.com/waveywaves/jenkinsfile-runner-operator/api/v1alpha1"
@@ -64,12 +65,72 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	//	return ctrl.Result{}, err
 	//}
 
+	jfConfigMapRef := runInstance.Spec.Jenkinsfile.ConfigMapRef
+	cascConfigMapRef := runInstance.Spec.ConfigurationAsCode.ConfigMapRef
+	volumes := []corev1.Volume{
+		{
+			Name: "jenkinsfile",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{Name: jfConfigMapRef},
+				},
+			},
+		},
+	}
+	volumeMounts := []corev1.VolumeMount{
+		{
+			Name:      "jenkinsfile",
+			MountPath: "/workspace/jenkinsfile",
+			SubPath:   "Jenkinsfile",
+		},
+	}
+
+	if len(cascConfigMapRef) > 0 {
+		cascVolume := corev1.Volume{
+			Name: "casc",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{Name: cascConfigMapRef},
+				},
+			},
+		}
+		cascVolumeMount := corev1.VolumeMount{
+			Name:      "casc",
+			MountPath: "/usr/share/jenkins/ref/casc",
+		}
+		volumes = append(volumes, cascVolume)
+		volumeMounts = append(volumeMounts, cascVolumeMount)
+	}
+
+	runPod := &corev1.Pod{
+		ObjectMeta: ctrl.ObjectMeta{
+			GenerateName: fmt.Sprintf("jfr-run-%s-", runInstance.Name),
+			Namespace:    req.Namespace,
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:            "jfr-run",
+					Image:           runInstance.Spec.Image,
+					VolumeMounts:    volumeMounts,
+					ImagePullPolicy: "Always",
+				},
+			},
+			Volumes:       volumes,
+			RestartPolicy: "Never",
+		},
+	}
+	err = r.Client.Create(context.TODO(), runPod)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{}, nil
 }
 
 func (r *RunReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Run{}).
-		For(&v1.Pod{}).
+		Owns(&corev1.Pod{}).
 		Complete(r)
 }

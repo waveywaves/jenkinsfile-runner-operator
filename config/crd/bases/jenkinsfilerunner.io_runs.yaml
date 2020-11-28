@@ -36,9 +36,26 @@ spec:
         spec:
           description: RunSpec defines the desired state of Run
           properties:
-            foo:
-              description: Foo is an example field of Run. Edit Run_types.go to remove/update
+            configurationAsCode:
+              properties:
+                configMapRef:
+                  type: string
+              required:
+              - configMapRef
+              type: object
+            image:
               type: string
+            jenkinsfile:
+              properties:
+                configMapRef:
+                  type: string
+              required:
+              - configMapRef
+              type: object
+          required:
+          - configurationAsCode
+          - image
+          - jenkinsfile
           type: object
         status:
           description: RunStatus defines the observed state of Run

@@ -1,0 +1,8 @@
+jenkins:
+  clouds:
+  - kubernetes:
+      name: "kubernetes"
+      directConnection: true
+      serverUrl: "https://kubernetes.default"
+      addMasterProxyEnvVars: true
+      maxRequestsPerHostStr: "32"

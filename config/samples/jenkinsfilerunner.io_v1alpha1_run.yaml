@@ -3,5 +3,8 @@ kind: Run
 metadata:
   name: run-sample
 spec:
-  # Add fields here
-  foo: bar
+  image: quay.io/waveywaves/jfr-test:latest
+  jenkinsfile:
+    configMapRef: jenkinsfile
+  configurationAsCode:
+    configMapRef: casc
