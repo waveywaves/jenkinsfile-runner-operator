@@ -23,9 +23,21 @@ import (
 // RunnerImageSpec defines the desired state of RunnerImage
 type RunnerImageSpec struct {
 	Plugins Plugins `json:"plugins,omitempty"`
+	// To the destination where the image should be pushed
+	To Image `json:"to"`
 }
 
 type Plugins []string
+
+// A RunnerImage definition
+type Image struct {
+	// The Image name
+	// +operator-sdk:csv:customresourcedefinitions:type=spec
+	Name string `json:"name"`
+	// Secret is an optional reference to a secret in the same namespace to use for pushing to or pulling from the registry.
+	// +operator-sdk:csv:customresourcedefinitions:xDescriptors="urn:alm:descriptor:io.kubernetes:Secret"
+	Secret string `json:"secret,omitempty"`
+}
 
 // RunnerImageStatus defines the observed state of RunnerImage
 type RunnerImageStatus struct {
@@ -38,6 +50,8 @@ type RunnerImageStatus struct {
 	// Reason would be used when there is an error and would be either of
 	// +optional
 	Reason string `json:"reason,omitempty"`
+	// Conditions would help in understanding if the instance of runnerImage has already gone through a certain Condition
+	// TODO: Add Conditions
 }
 
 // +kubebuilder:object:root=true
@@ -45,6 +59,7 @@ type RunnerImageStatus struct {
 // +kubebuilder:printcolumn:name="Plugins",type=string,JSONPath=`.spec.plugins`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.phase`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +operator-sdk:csv:customresourcedefinitions:displayName="Runner Image",resources={{Pod,v1},{ConfigMap,v1}}
 // RunnerImage is the Schema for the runnerimages API
 type RunnerImage struct {
 	metav1.TypeMeta   `json:",inline"`

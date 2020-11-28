@@ -50,6 +50,21 @@ spec:
               items:
                 type: string
               type: array
+            to:
+              description: To the destination where the image should be pushed
+              properties:
+                name:
+                  description: The Image name
+                  type: string
+                secret:
+                  description: Secret is an optional reference to a secret in the
+                    same namespace to use for pushing to or pulling from the registry.
+                  type: string
+              required:
+              - name
+              type: object
+          required:
+          - to
           type: object
         status:
           description: RunnerImageStatus defines the observed state of RunnerImage
