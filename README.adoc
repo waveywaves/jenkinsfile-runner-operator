@@ -1,0 +1,18 @@
+Jenkinsfile Runner Operator
+---------------------------
+
+Operator for the link:https://github.com/jenkinsci/jenkinsfile-runner[jenkinsfile-runner] to build custom
+Jenkinsfile-Runner images easily allowing the users to approach to working with Jenkinsfiles in a serverless fashion.
+
+Overview
+~~~~~~~~
+The Operator exposes the jenkinsfilerunner.io/v1alpha1 `RunnerImage` APIs.
+
+RunnerImage
+^^^^^^^^^^^
+The RunnerImage allows the user to bootstrap the environment in which they would be able to run their Jenkinsfiles.
+Users can provide their own plugins and CasC configuration which would be needed for their Jenkinsfile to run.
+
+Run (TBD)
+^^^^^^^^^
+Run would contain the Jenkinsfile which would be executed against a RunnerImage.
