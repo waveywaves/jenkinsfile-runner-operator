@@ -26,10 +26,8 @@ rules:
   - create
   - delete
   - get
-  - list
   - patch
   - update
-  - watch
 - apiGroups:
   - ""
   resources:
@@ -42,6 +40,28 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - patch
+  - update
 - apiGroups:
   - jenkinsfilerunner.io
   resources:
@@ -62,6 +82,24 @@ rules:
   - create
   - delete
   - get
+  - patch
+  - update
+- apiGroups:
+  - jenkinsfilerunner.io
+  resources:
+  - runnerimages/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - jenkinsfilerunner.io
+  resources:
+  - runs
+  verbs:
+  - create
+  - delete
+  - get
   - list
   - patch
   - update
@@ -69,7 +107,17 @@ rules:
 - apiGroups:
   - jenkinsfilerunner.io
   resources:
-  - runnerimages/status
+  - runs/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - patch
+  - update
+- apiGroups:
+  - jenkinsfilerunner.io
+  resources:
+  - runs/status
   verbs:
   - get
   - patch

@@ -6,6 +6,9 @@ resources:
 - group: jenkinsfilerunner.io
   kind: RunnerImage
   version: v1alpha1
+- group: jenkinsfilerunner.io
+  kind: Run
+  version: v1alpha1
 version: 3-alpha
 plugins:
   go.sdk.operatorframework.io/v2-alpha: {}

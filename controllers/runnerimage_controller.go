@@ -67,6 +67,7 @@ type RunnerImageReconciler struct {
 // +kubebuilder:rbac:groups=core,resources=configmaps/finalizers,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=secrets/finalizers,verbs=get;create;update;patch;delete
+
 func (r *RunnerImageReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	// Initialize Logger
