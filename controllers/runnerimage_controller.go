@@ -19,16 +19,15 @@ package controllers
 import (
 	"context"
 	"fmt"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	"github.com/waveywaves/jenkinsfile-runner-operator/api/v1alpha1"
 )
@@ -38,9 +37,11 @@ var (
 	DockerfileName          = "Dockerfile"
 	DockerfileTemplate      = `FROM quay.io/waveywaves/jenkinsfile-runner
 RUN cd /app/jenkins && jar -cvf jenkins.war *
-RUN java -jar /app/bin/jenkins-plugin-manager.jar --war /app/jenkins/jenkins.war --plugin-file /usr/share/jenkins/ref/plugins.txt && rm /app/jenkins/jenkins.war
+RUN java -jar /app/bin/jenkins-plugin-manager.jar --war /app/jenkins/jenkins.war %s && rm /app/jenkins/jenkins.war
 ENTRYPOINT /app/bin/jenkinsfile-runner-launcher -f /workspace/jenkinsfile/
 `
+
+	PluginsTxtName = "plugins.txt"
 
 	// Phases
 	PhaseInitialized = "Initialized"
@@ -110,7 +111,7 @@ func (r *RunnerImageReconciler) InitResources(req ctrl.Request, runnerImageInsta
 	return nil
 }
 
-func (r *RunnerImageReconciler) initResources(req ctrl.Request, runnerImageInstance *v1alpha1.RunnerImage) error {
+func (r *RunnerImageReconciler) initResources(req ctrl.Request, runnerImage *v1alpha1.RunnerImage) error {
 	// Define a ConfigMap containing the Dockerfile used to build the image
 	// TODO: Add to pkg as GetOrCreateDockerfileConfigMap
 	dockerfileConfigMap := &corev1.ConfigMap{}
@@ -118,7 +119,7 @@ func (r *RunnerImageReconciler) initResources(req ctrl.Request, runnerImageInsta
 	err := r.Client.Get(context.TODO(), dfConfigMapNamespacedName, dockerfileConfigMap)
 	if apierrors.IsNotFound(err) {
 		runnerImageLogger.Info("Creating a new ConfigMap", "ConfigMap.Namespace", dfConfigMapNamespacedName.Namespace, "ConfigMap.Name", dfConfigMapNamespacedName.Name)
-		dockerfileConfigMap = r.getJFRDockerfile(req.NamespacedName)
+		dockerfileConfigMap = r.getJFRDockerfile(req.NamespacedName, runnerImage)
 		err = r.Client.Create(context.TODO(), dockerfileConfigMap)
 		if err != nil {
 			return err
@@ -132,7 +133,7 @@ func (r *RunnerImageReconciler) initResources(req ctrl.Request, runnerImageInsta
 	kanikoBuildPod, err := r.GetKanikoPod(req)
 	if apierrors.IsNotFound(err) {
 		runnerImageLogger.Info("Creating a new Pod", "Pod.Namespace", kanikoBuildPod.Namespace, "ConfigMap.Name", kanikoBuildPod.Name)
-		kanikoBuildPod, err = r.CreateKanikoPod(req, runnerImageInstance)
+		kanikoBuildPod, err = r.CreateKanikoPod(req, runnerImage)
 		if err != nil {
 			return err
 		}
@@ -156,9 +157,18 @@ func (r *RunnerImageReconciler) GetKanikoPod(req ctrl.Request) (*corev1.Pod, err
 	return kanikoBuildPod, err
 }
 
-func (r *RunnerImageReconciler) getJFRDockerfile(nn types.NamespacedName) *corev1.ConfigMap {
+func (r *RunnerImageReconciler) getJFRDockerfile(nn types.NamespacedName, runnerImage *v1alpha1.RunnerImage) *corev1.ConfigMap {
+
+	dockerfile := ``
+
+	if len(runnerImage.Spec.Plugins) > 0 {
+		dockerfile = fmt.Sprintf(DockerfileTemplate, "--plugin-file /usr/share/jenkins/ref/plugins.txt")
+	} else {
+		dockerfile = fmt.Sprintf(DockerfileTemplate, "")
+	}
+
 	data := map[string]string{
-		DockerfileName: DockerfileTemplate,
+		DockerfileName: dockerfile,
 	}
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -170,6 +180,107 @@ func (r *RunnerImageReconciler) getJFRDockerfile(nn types.NamespacedName) *corev
 }
 
 func (r *RunnerImageReconciler) getKanikoPodDefinition(nn types.NamespacedName, runnerImage *v1alpha1.RunnerImage) *corev1.Pod {
+
+	volumes := []corev1.Volume{
+		{
+			Name: "dockerfile",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{Name: r.getJFRDockerfileConfigMapName(nn)},
+				},
+			},
+		},
+		{
+			Name: "secret",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: runnerImage.Spec.To.Secret,
+					Items: []corev1.KeyToPath{
+						{
+							Key:  ".dockerconfigjson",
+							Path: "config.json",
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "workspace",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
+		{
+			Name: "plugins",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
+	}
+	volumeMounts := []corev1.VolumeMount{
+		{
+			Name:      "workspace",
+			MountPath: "/workspace",
+		},
+		{
+			Name:      "plugins",
+			MountPath: "/usr/share/jenkins/ref/plugins",
+		},
+		{
+			Name:      "dockerfile",
+			MountPath: "/dockerfile",
+		},
+		{
+			Name:      "secret",
+			MountPath: "/kaniko/.docker",
+			ReadOnly:  true,
+		},
+	}
+
+	plugins := runnerImage.Spec.Plugins
+	if len(plugins) > 0 {
+		pluginstxt := ``
+		for _, p := range plugins {
+			pluginstxt += fmt.Sprintf(`
+%s`, p)
+		}
+
+		pluginstxtConfigMap := &corev1.ConfigMap{}
+		ptConfigMapNamespacedName := types.NamespacedName{Name: r.getJFRPluginsConfigMapName(nn), Namespace: nn.Namespace}
+		err := r.Client.Get(context.TODO(), ptConfigMapNamespacedName, pluginstxtConfigMap)
+		if apierrors.IsNotFound(err) {
+			runnerImageLogger.Info("Creating a new ConfigMap", "ConfigMap.Namespace", ptConfigMapNamespacedName.Namespace, "ConfigMap.Name", ptConfigMapNamespacedName.Name)
+			data := map[string]string{
+				PluginsTxtName: pluginstxt,
+			}
+			pluginstxtConfigMap = &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      r.getJFRPluginsConfigMapName(nn),
+					Namespace: nn.Namespace,
+				},
+				Data: data,
+			}
+
+			r.Client.Create(context.TODO(), pluginstxtConfigMap)
+			// ConfigMap created successfully - don't requeue
+		}
+
+		pluginstxtConfigMapVolume := corev1.Volume{
+			Name: "pluginstxt",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{Name: r.getJFRPluginsConfigMapName(nn)},
+				},
+			},
+		}
+		volumes = append(volumes, pluginstxtConfigMapVolume)
+		pluginstxtConfigMapVolumeMount := corev1.VolumeMount{
+			Name:      "pluginstxt",
+			MountPath: "/usr/share/jenkins/ref/",
+		}
+		volumeMounts = append(volumeMounts, pluginstxtConfigMapVolumeMount)
+	}
+
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      r.getKanikoPodName(nn),
@@ -178,23 +289,9 @@ func (r *RunnerImageReconciler) getKanikoPodDefinition(nn types.NamespacedName, 
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:  "jfr-build",
-					Image: "quay.io/waveywaves/kaniko-executor:v1.3.0",
-					VolumeMounts: []corev1.VolumeMount{
-						{
-							Name:      "workspace",
-							MountPath: "/workspace",
-						},
-						{
-							Name:      "dockerfile",
-							MountPath: "/dockerfile",
-						},
-						{
-							Name:      "secret",
-							MountPath: "/kaniko/.docker",
-							ReadOnly:  true,
-						},
-					},
+					Name:         "jfr-build",
+					Image:        "quay.io/waveywaves/kaniko-executor:patched-v1.3.0",
+					VolumeMounts: volumeMounts,
 					// Command: []string{"sh", "-c", "tail -f /dev/null"},
 					Args: []string{
 						"--dockerfile=/dockerfile/Dockerfile",
@@ -205,36 +302,7 @@ func (r *RunnerImageReconciler) getKanikoPodDefinition(nn types.NamespacedName, 
 					},
 				},
 			},
-			Volumes: []corev1.Volume{
-				{
-					Name: "dockerfile",
-					VolumeSource: corev1.VolumeSource{
-						ConfigMap: &corev1.ConfigMapVolumeSource{
-							LocalObjectReference: corev1.LocalObjectReference{Name: r.getJFRDockerfileConfigMapName(nn)},
-						},
-					},
-				},
-				{
-					Name: "secret",
-					VolumeSource: corev1.VolumeSource{
-						Secret: &corev1.SecretVolumeSource{
-							SecretName: runnerImage.Spec.To.Secret,
-							Items: []corev1.KeyToPath{
-								{
-									Key:  ".dockerconfigjson",
-									Path: "config.json",
-								},
-							},
-						},
-					},
-				},
-				{
-					Name: "workspace",
-					VolumeSource: corev1.VolumeSource{
-						EmptyDir: &corev1.EmptyDirVolumeSource{},
-					},
-				},
-			},
+			Volumes: volumes,
 		},
 	}
 }
@@ -253,6 +321,10 @@ func (r *RunnerImageReconciler) getKanikoPodName(nn types.NamespacedName) string
 
 func (r *RunnerImageReconciler) getJFRDockerfileConfigMapName(nn types.NamespacedName) string {
 	return fmt.Sprintf("jfr-dockerfile-%s", nn.Name)
+}
+
+func (r *RunnerImageReconciler) getJFRPluginsConfigMapName(nn types.NamespacedName) string {
+	return fmt.Sprintf("jfr-plugins-%s", nn.Name)
 }
 
 func (r *RunnerImageReconciler) SetupWithManager(mgr ctrl.Manager) error {

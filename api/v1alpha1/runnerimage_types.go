@@ -59,7 +59,6 @@ type RunnerImageStatus struct {
 // +kubebuilder:printcolumn:name="Plugins",type=string,JSONPath=`.spec.plugins`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.phase`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-// +operator-sdk:csv:customresourcedefinitions:displayName="Runner Image",resources={{Pod,v1},{ConfigMap,v1}}
 // RunnerImage is the Schema for the runnerimages API
 type RunnerImage struct {
 	metav1.TypeMeta   `json:",inline"`
