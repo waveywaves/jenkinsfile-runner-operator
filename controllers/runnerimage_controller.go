@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	"github.com/waveywaves/jenkinsfile-runner-operator/api/v1alpha1"
 )
@@ -84,6 +83,7 @@ func (r *RunnerImageReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		return ctrl.Result{}, err
 	}
 	runnerImageLogger.Info("Jenkins RunnerImage with name " + runnerImageInstance.Name + " detected")
+	runnerImageInstance.Status.Plugins = len(runnerImageInstance.Spec.Plugins)
 	runnerImageInstance.Status.Phase = PhaseInitialized
 	err = r.Status().Update(context.TODO(), runnerImageInstance)
 	if err != nil {
@@ -181,7 +181,6 @@ func (r *RunnerImageReconciler) getJFRDockerfile(nn types.NamespacedName, runner
 }
 
 func (r *RunnerImageReconciler) getKanikoPodDefinition(nn types.NamespacedName, runnerImage *v1alpha1.RunnerImage) *corev1.Pod {
-
 	volumes := []corev1.Volume{
 		{
 			Name: "dockerfile",
@@ -242,8 +241,8 @@ func (r *RunnerImageReconciler) getKanikoPodDefinition(nn types.NamespacedName, 
 	if len(plugins) > 0 {
 		pluginstxt := ``
 		for _, p := range plugins {
-			pluginstxt += fmt.Sprintf(`
-%s`, p)
+			pluginstxt += fmt.Sprintf(`%s
+`, p)
 		}
 
 		pluginstxtConfigMap := &corev1.ConfigMap{}
@@ -303,7 +302,8 @@ func (r *RunnerImageReconciler) getKanikoPodDefinition(nn types.NamespacedName, 
 					},
 				},
 			},
-			Volumes: volumes,
+			Volumes:       volumes,
+			RestartPolicy: "Never",
 		},
 	}
 }
@@ -334,6 +334,5 @@ func (r *RunnerImageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.Pod{}).
 		Owns(&corev1.ConfigMap{}).
 		Owns(&corev1.Secret{}).
-		WithEventFilter(predicate.ResourceVersionChangedPredicate{}).
 		Complete(r)
 }

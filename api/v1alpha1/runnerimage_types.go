@@ -41,6 +41,8 @@ type Image struct {
 
 // RunnerImageStatus defines the observed state of RunnerImage
 type RunnerImageStatus struct {
+	// PLugins shows the number of plugins which have been explicitly installed
+	Plugins int `json:"plugins,omitempty"`
 	// Phase would be either of Initialized, Started, Completed, Error
 	// +optional
 	Phase string `json:"phase,omitempty"`
@@ -56,7 +58,7 @@ type RunnerImageStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Plugins",type=string,JSONPath=`.spec.plugins`
+// +kubebuilder:printcolumn:name="Plugins",type=string,JSONPath=`.status.plugins`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.phase`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // RunnerImage is the Schema for the runnerimages API

@@ -9,7 +9,7 @@ metadata:
   name: runnerimages.jenkinsfilerunner.io
 spec:
   additionalPrinterColumns:
-  - JSONPath: .spec.plugins
+  - JSONPath: .status.plugins
     name: Plugins
     type: string
   - JSONPath: .status.phase
@@ -76,6 +76,10 @@ spec:
               description: Phase would be either of Initialized, Started, Completed,
                 Error
               type: string
+            plugins:
+              description: PLugins shows the number of plugins which have been explicitly
+                installed
+              type: integer
             reason:
               description: Reason would be used when there is an error and would be
                 either of
