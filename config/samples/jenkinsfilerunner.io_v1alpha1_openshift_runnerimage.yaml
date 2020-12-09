@@ -8,13 +8,7 @@ spec:
     - openshift-sync
     - openshift-login
     - configuration-as-code
-    - workflow-scm-step
-    - credentials
-    - workflow-job
-    - workflow-cps-global-lib
-    - workflow-support
-    - pipeline-model-definition
-    - kubernetes:1.25.2
+    - kubernetes
   to: 
     name: quay.io/waveywaves/jfr-test
     secret: waveywaves-jfr-helper-pull-secret  

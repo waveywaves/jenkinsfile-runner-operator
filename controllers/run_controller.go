@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/go-logr/logr"
 	v1alpha1 "github.com/waveywaves/jenkinsfile-runner-operator/api/v1alpha1"
@@ -104,8 +105,8 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	runPod := &corev1.Pod{
 		ObjectMeta: ctrl.ObjectMeta{
-			GenerateName: fmt.Sprintf("jfr-run-%s-", runInstance.Name),
-			Namespace:    req.Namespace,
+			Name:      fmt.Sprintf("jfr-run-%s", runInstance.Name),
+			Namespace: req.Namespace,
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
@@ -120,6 +121,7 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			RestartPolicy: "Never",
 		},
 	}
+	controllerutil.SetControllerReference(runInstance, runPod, r.Scheme)
 	err = r.Client.Create(context.TODO(), runPod)
 	if err != nil {
 		return ctrl.Result{}, err

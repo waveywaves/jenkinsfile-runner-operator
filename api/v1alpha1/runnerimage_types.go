@@ -22,6 +22,9 @@ import (
 
 // RunnerImageSpec defines the desired state of RunnerImage
 type RunnerImageSpec struct {
+	// Debug uses kaniko debug image instead of the executor image
+	Debug bool `json:"debug,omitempty"`
+	// Plugins which need to be installed in Jenkins
 	Plugins Plugins `json:"plugins,omitempty"`
 	// To the destination where the image should be pushed
 	To Image `json:"to"`

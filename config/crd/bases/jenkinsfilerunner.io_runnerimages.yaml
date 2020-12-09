@@ -46,7 +46,11 @@ spec:
         spec:
           description: RunnerImageSpec defines the desired state of RunnerImage
           properties:
+            debug:
+              description: Debug uses kaniko debug image instead of the executor image
+              type: boolean
             plugins:
+              description: Plugins which need to be installed in Jenkins
               items:
                 type: string
               type: array
