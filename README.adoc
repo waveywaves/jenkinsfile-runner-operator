@@ -13,6 +13,6 @@ RunnerImage
 The RunnerImage allows the user to bootstrap the environment in which they would be able to run their Jenkinsfiles.
 Users can provide their own plugins and CasC configuration which would be needed for their Jenkinsfile to run.
 
-Run (TBD)
-^^^^^^^^^
+Run
+^^^
 Run would contain the Jenkinsfile which would be executed against a RunnerImage.
