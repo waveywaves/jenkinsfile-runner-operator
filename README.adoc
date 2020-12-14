@@ -6,7 +6,7 @@ Jenkinsfile-Runner images easily allowing the users to approach to working with 
 
 Overview
 ~~~~~~~~
-The Operator exposes the jenkinsfilerunner.io/v1alpha1 `RunnerImage` APIs.
+The Operator exposes the jenkinsfilerunner.io/v1alpha1 `RunnerImage` and `Run` APIs.
 
 RunnerImage
 ^^^^^^^^^^^
