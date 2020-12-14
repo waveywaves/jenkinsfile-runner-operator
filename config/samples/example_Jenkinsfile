@@ -1,37 +1,71 @@
-pipeline {
-  agent {
-    kubernetes {
-      yaml """
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    some-label: some-label-value
-spec:
-  containers:
-  - name: maven
-    image: maven:alpine
-    command:
-    - cat
-    tty: true
-  - name: busybox
-    image: busybox
-    command:
-    - cat
-    tty: true
-"""
-    }
-  }
-  stages {
-    stage('Run maven') {
-      steps {
-        container('maven') {
-          sh 'mvn -version'
+#!/usr/bin/env groovy
+import java.text.SimpleDateFormat
+
+podTemplate( name: 'openshift', label: 'openshift-agents', showRawYaml: false, envVars: [
+             envVar(key: 'PATH', value: '/opt/rh/rh-maven35/root/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin')],
+             containers: [ 
+              containerTemplate(name: 'maven', image: 'registry.redhat.io/openshift4/ose-jenkins-agent-maven', ttyEnabled: true, command: 'cat', workingDir: '/tmp'),
+              containerTemplate(name: 'nodejs', image: 'registry.redhat.io/openshift4/jenkins-agent-nodejs-10-rhel7', ttyEnabled: true, command: 'cat', workingDir: '/tmp')
+  ]) { 
+     node('openshift-agents') {
+        stage('Get a Maven project') {
+            git 'https://github.com/jenkins-docs/simple-java-maven-app.git'
+            container('maven') {
+                stage('Build a Maven project') {
+                    sh """
+                        mvn -B clean install
+                    """
+                }
+            }
         }
-        container('busybox') {
-          sh '/bin/busybox'
+
+        stage('Get a Golang project') {
+          git url: 'https://github.com/golang/example.git'
+           container('nodejs') {
+            openshift.withCluster() {
+              def currentProject
+              openshift.withProject() {
+                currentProject = openshift.project()
+                def project = "test-" + new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date())
+                echo "To allow jenkins to create projects from a pipeline, the following command must be run"
+                echo "oc adm policy add-cluster-role-to-user self-provisioner system:serviceaccount:$currentProject:jenkins"
+                openshift.raw( "new-project $project" )
+                // echo "Context project is $openshift.project()"
+                // Project context has been set to the pipeline project
+  	      currentProject = project
+                echo "openshift.raw() commands will specify $currentProject as project"
+                // but then we will forcibely specify the new-project as the project to run raw commands against
+                echo "start"
+                def result = ""
+                echo "\"adm prune deployments\", \" --keep-complete=0 --keep-failed=0 -n ${currentProject}\""
+                result = openshift.raw( "adm prune deployments", "--namespace=${currentProject} --keep-complete=0 --keep-failed=0 -n ${currentProject}")
+                echo "${result}"
+
+                echo "\"adm prune deployments\", \"-n ${currentProject}\", \" --keep-complete=0 --keep-failed=0 \""
+                result = openshift.raw( "adm prune deployments", "-n ${currentProject}", "--keep-complete=0 --keep-failed=0 -n ${currentProject}")
+                echo "${result}"
+
+                echo "\"adm prune deployments\", \" --keep-complete=0 --keep-failed=0\", \"-n ${currentProject}\""
+                result = openshift.raw( "adm prune deployments", " --keep-complete=0 --keep-failed=0", "-n ${currentProject}")
+  	      echo "${result}"
+
+                echo "\"adm prune deployments  --keep-complete=0 --keep-failed=0 -n ${currentProject}\""
+                result = openshift.raw( "adm prune deployments  --keep-complete=0 --keep-failed=0 -n ${currentProject}")
+                echo "${result}"
+
+                echo "\"adm -n ${currentProject} prune deployments  --keep-complete=0 --keep-failed=0 \""
+                result = openshift.raw( "adm -n ${currentProject} prune deployments  --keep-complete=0 --keep-failed=0")
+                echo "${result}"
+
+  	      echo "\"adm --namespace=${currentProject} prune deployments  --keep-complete=0 --keep-failed=0 \""
+                result = openshift.raw( "adm --namespace=${currentProject} prune deployments  --keep-complete=0 --keep-failed=0")
+                echo "${result}"
+
+                echo "end"
+              }
+            }
+            }
         }
-      }
+
     }
-  }
 }

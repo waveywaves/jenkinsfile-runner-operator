@@ -111,6 +111,12 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
+					Env: []corev1.EnvVar{
+						{
+							Name:  "JAVA_OPTS",
+							Value: "-Djenkins.model.Jenkins.slaveAgentPort=50000 -Djenkins.model.Jenkins.slaveAgentPortEnforce=true -Dhudson.slaves.NodeProvisioner.initialDelay=1 -Dhudson.slaves.ConnectionActivityMonitor.timeToPing=30000",
+						},
+					},
 					Name:            "jfr-run",
 					Image:           runInstance.Spec.Image,
 					VolumeMounts:    volumeMounts,

@@ -40,9 +40,11 @@ var (
 	DockerfileStorageSuffix = "dockerfile-storage"
 	DockerfileName          = "Dockerfile"
 	DockerfileTemplate      = `FROM quay.io/waveywaves/jenkinsfile-runner
+ADD /scripts/jenkinsfile-runner-launcher.sh /app/bin/jenkinsfile-runner-launcher.sh
+CMD chmod +x /app/bin/jenkinsfile-runner-launcher.sh
 RUN cd /app/jenkins && jar -cvf jenkins.war *
 RUN java -jar /app/bin/jenkins-plugin-manager.jar --war /app/jenkins/jenkins.war %s && rm /app/jenkins/jenkins.war
-ENTRYPOINT /app/bin/jenkinsfile-runner-launcher -f /workspace/jenkinsfile/
+ENTRYPOINT /app/bin/jenkinsfile-runner-launcher.sh
 `
 
 	// Phases
@@ -214,6 +216,12 @@ func (r *RunnerImageReconciler) getKanikoPodDefinition(nn types.NamespacedName, 
 				},
 			},
 		},
+		{
+			Name: "scripts",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
 	}
 
 	volumeMounts := []corev1.VolumeMount{
@@ -225,6 +233,10 @@ func (r *RunnerImageReconciler) getKanikoPodDefinition(nn types.NamespacedName, 
 			Name:      "secret",
 			MountPath: "/kaniko/.docker",
 			ReadOnly:  true,
+		},
+		{
+			Name:      "scripts",
+			MountPath: "/scripts",
 		},
 	}
 
@@ -272,12 +284,42 @@ func (r *RunnerImageReconciler) getKanikoPodDefinition(nn types.NamespacedName, 
 		volumeMounts = append(volumeMounts, pluginstxtConfigMapVolumeMount)
 	}
 
+	initContainer := corev1.Container{
+		Name:         "place-script",
+		Image:        "quay.io/openshift-pipeline/tektoncd-pipeline-bash",
+		VolumeMounts: volumeMounts,
+		Command:      []string{"sh"},
+		Args:         []string{"-c", ""},
+	}
+
+	// Append to the place-scripts script to place the
+	// script file in a known location in the scripts volume.
+	tmpFile := "/scripts/jenkinsfile-runner-launcher.sh"
+	heredoc := "heredoc"
+	script := `#!/bin/sh
+export JAVA_OPTS="${JAVA_OPTS:+$JAVA_OPTS}"
+export JAVA_OPTS="${JAVA_OPTS} -Dhudson.TcpSlaveAgentListener.hostName=$(hostname -i)"
+export JAVA_OPTS="${JAVA_OPTS} -Djenkins.model.Jenkins.slaveAgentPort=50000"
+export JAVA_OPTS="${JAVA_OPTS} -Djenkins.model.Jenkins.slaveAgentPortEnforce=true"
+export JAVA_OPTS="${JAVA_OPTS} -Dhudson.slaves.NodeProvisioner.initialDelay=1" # How long to wait after startup before starting to provision nodes from clouds
+export JAVA_OPTS="${JAVA_OPTS} -Dhudson.slaves.ConnectionActivityMonitor.timeToPing=30000" # wait after startup to start checking agent connections, in milliseconds.
+
+/app/bin/jenkinsfile-runner-launcher --file=/workspace/jenkinsfile
+`
+	initContainer.Args[1] += fmt.Sprintf(`tmpfile="%s"
+touch ${tmpfile} && chmod +x ${tmpfile}
+cat > ${tmpfile} << '%s'
+%s
+%s
+`, tmpFile, heredoc, script, heredoc)
+
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      r.getKanikoPodName(nn),
 			Namespace: nn.Namespace,
 		},
 		Spec: corev1.PodSpec{
+			InitContainers: []corev1.Container{initContainer},
 			Containers: []corev1.Container{
 				{
 					Name:         "jfr-build",

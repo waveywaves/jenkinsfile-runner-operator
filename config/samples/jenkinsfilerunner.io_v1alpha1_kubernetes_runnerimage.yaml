@@ -1,12 +1,9 @@
 apiVersion: jenkinsfilerunner.io/v1alpha1
 kind: RunnerImage
 metadata:
-  name: openshift
+  name: kubernetes
 spec:
   plugins:
-    - openshift-client
-    - openshift-sync
-    - openshift-login
     - configuration-as-code
     - kubernetes
   to: 

@@ -3,7 +3,7 @@ kind: Run
 metadata:
   name: run-sample
 spec:
-  image: quay.io/waveywaves/jfr-test@sha256:b5d3754fd10512bb9f1b62cf28446ecedd068998db233ceccb97888ada8170d9
+  image: quay.io/waveywaves/jfr-test@sha256:f8a21694c193c427a0f3ba98988cacf85e5ce99f57e1847b3d6d96dbfa56d4cc
   jenkinsfile:
     configMapRef: jenkinsfile
   configurationAsCode:
